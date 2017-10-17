@@ -1,0 +1,68 @@
+
+'written by Mike Nielsen
+'This code exports the values needed to calculated randomized quantile residuals.
+'  * record number
+'  * fitted value
+'  * observed value
+'  * weights
+
+
+Public Sub exportRQR()
+
+    'need to add reference to Microsoft Scripting Runtime until Tools | References
+    
+    Dim lngObs As Long
+    Dim lngI As Long
+    Dim strLine As String                   'line to be written
+    
+    Dim strFilePath As String
+    
+    Dim fso As FileSystemObject
+    Dim ts As TextStream
+    
+    strFilePath = InputBox("Enter file path", , "D:\export_RQR_PD.csv")
+    
+    Set fso = New FileSystemObject
+    Set ts = fso.CreateTextFile(strFilePath, True)
+    
+    lngObs = Application.BaseData.NumberOfObservations
+    
+    ' write out headers
+    strLine = "unique.id,weight,observed,fitted,pearson,ss.pearson,deviance,ss.deviance,hat"
+    ts.WriteLine strLine
+
+'1 - embPearson
+'2 - embStandardizedPearson
+'3 - embStudentizedStandardizedPearson
+'4 - embDeviance
+'5 - embStandardizedDeviance
+'6 - embStudentizedStandardizedDeviance
+'7 - embAnscombe
+'8 - embCooksPearson
+'9 - embCooksDeviance
+    
+    ' write out values
+    For lngI = 1 To lngObs
+        strLine = Application.Simplefactors(4).LevelName(Application.BaseData.xValue(4, lngI)) & _
+                  Application.Simplefactors(5).LevelName(Application.BaseData.xValue(5, lngI)) & _
+                  Application.Simplefactors(6).LevelName(Application.BaseData.xValue(6, lngI)) & _
+                  Application.Simplefactors(7).LevelName(Application.BaseData.xValue(7, lngI)) & _
+                  Application.Simplefactors(8).LevelName(Application.BaseData.xValue(8, lngI)) & ", " & _
+                  Application.BaseData.WeightData(lngI) & ", " & _
+                  Application.BaseData.YValue(lngI) & ", " & _
+                  Application.ModelResults.FittedMu(lngI) & ", " & _
+                  Application.ModelResults.LinearResidual(lngI, 1) & ", " & _
+                  Application.ModelResults.LinearResidual(lngI, 3) & ", " & _
+                  Application.ModelResults.LinearResidual(lngI, 4) & ", " & _
+                  Application.ModelResults.LinearResidual(lngI, 6) & ", " & _
+                  Application.ModelResults.HatDiagonal(lngI)
+        ts.WriteLine strLine
+        If lngI Mod 10000 = 0 Then Debug.Print lngI & " of " & lngObs
+    Next lngI
+        
+    ts.Close
+    
+    Set ts = Nothing
+    Set fso = Nothing
+
+End Sub
