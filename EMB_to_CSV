@@ -5,7 +5,6 @@ Public Sub EMB_to_CSV()
     '------------------------------------------------------------------------------------------------------------------------------------------------------------
     
     '-- Purpose         Output data from current model to csv
-    '-- Author:         Rob Kane
     '-- Date:           Oct 30, 2016
     '-- References:     Microsoft Scripting Runtime
     '-- Parameters:     strFilePath (path to and name of csv), booWriteAllSimples (indicates whether explanatory variables (all simple factors) should be exported as well), intWriteTheseSimples (vectory of simple factor indices to be included {instead of all or none}), lngMaxRows (exports a specific number of rows {observations} rather than all
