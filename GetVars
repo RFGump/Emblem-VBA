@@ -1,0 +1,11 @@
+Option Explicit
+
+Sub GetVars()
+
+Dim i as Integer
+
+For i = 1 to Simplefactors.Count
+  emblemLog.AddText i & " " & Simplefactors(i).Name
+Next i
+
+End Sub
