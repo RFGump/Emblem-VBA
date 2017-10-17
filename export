@@ -1,0 +1,91 @@
+
+'This code exports the record #, fitted and observed value
+
+Public Sub getRows()
+
+    'need to add reference to Microsoft Scripting Runtime until Tools | References
+    
+    Dim lngObs As Long
+    Dim lngI As Long
+    Dim strLine As String                   'line to be written
+    Dim intWriteTheseSimples()              'a vector of simple factor indices to be included
+    Dim intSF_i As Integer                  'loop through simple factors
+    Dim intNumberOfBins As Integer
+    Dim lngNumberOfObs As Long          'number of obserations
+    Dim dblBinSize As Double            'the size (#obs or sumWgt) of each bin
+    Dim intThisBin As Integer           'the index of the current bin
+    Dim lngRank() As Long               'vector of ranked indices
+    Dim dblFitted() As Double           'vector of fitted values
+
+    
+    Dim strFilePath As String
+    
+    Dim fso As FileSystemObject
+    Dim ts As TextStream
+    
+    strFilePath = InputBox("Enter file path", , "Q:\2016_Auto_Refresh\100_Documentation\30_Research\Residuals\export.csv")
+    
+    Set fso = New FileSystemObject
+    Set ts = fso.CreateTextFile(strFilePath, True)
+    
+    lngObs = Application.BaseData.NumberOfObservations
+    
+    intWriteTheseSimples = Array(1, 2, 3, 10, 11, 12, 13, 14, 15, 18, 19, 20, 21, 27, 36, 38, _
+                                 39, 40, 41, 43, 44, 45, 46, 47, 48, 49, 52, 54, 59, 60, 61, 64, 65, 67, 78, _
+                                 79, 82, 84, 87, 88, 89, 94, 95, 102, 119, 126, 158, 176, 179, 210, 213, 214, 215, 243, 247)
+    
+    intNumberOfBins = 8000
+    lngNumberOfObs = Application.BaseData.NumberOfObservations
+    dblBinSize = (lngNumberOfObs / intNumberOfBins)
+    
+    ReDim dblFitted(1 To lngNumberOfObs)
+    With Application
+        For lngI = 1 To lngNumberOfObs
+            dblFitted(lngI) = .ModelResults.FittedMu(lngI)
+        Next
+    End With
+    
+    lngRank() = EMBSorting.RankTable(dblFitted())
+         
+    strLine = "obs, UniqueID"
+    
+    For intSF_i = 0 To UBound(intWriteTheseSimples)
+        strLine = strLine & "," & Application.Simplefactors(intWriteTheseSimples(intSF_i)).Name
+    Next intSF_i
+    
+    strLine = strLine & ",Bin,Observed,Predicted,Weight,Hat"
+    
+    ts.WriteLine strLine
+
+         
+    For lngI = 1 To lngObs
+    'For lngI = 1 To 100
+        intThisBin = Int((lngRank(lngI) - 1) / dblBinSize) + 1
+        strLine = lngI & ", " & _
+                     Application.Simplefactors(4).LevelName(Application.BaseData.xValue(4, lngI)) & _
+                     Application.Simplefactors(5).LevelName(Application.BaseData.xValue(5, lngI)) & _
+                     Application.Simplefactors(6).LevelName(Application.BaseData.xValue(6, lngI)) & _
+                     Application.Simplefactors(7).LevelName(Application.BaseData.xValue(7, lngI)) & _
+                     Application.Simplefactors(8).LevelName(Application.BaseData.xValue(8, lngI))
+
+        For intSF_i = 0 To UBound(intWriteTheseSimples)
+            strLine = strLine & "," & Application.Simplefactors(intWriteTheseSimples(intSF_i)).LevelName(Application.BaseData.xValue(intWriteTheseSimples(intSF_i), lngI))
+        Next intSF_i
+
+        strLine = strLine & "," & intThisBin
+        strLine = strLine & "," & Application.BaseData.YValue(lngI)
+        strLine = strLine & "," & Application.ModelResults.FittedMu(lngI)
+        strLine = strLine & "," & Application.BaseData.WeightData(lngI)
+        strLine = strLine & "," & Application.ModelResults.HatDiagonal(lngI)
+        
+        ts.WriteLine strLine
+        
+        If lngI Mod 10000 = 0 Then Debug.Print lngI & " of " & lngObs
+    Next lngI
+        
+    ts.Close
+    
+    Set ts = Nothing
+    Set fso = Nothing
+
+End Sub
