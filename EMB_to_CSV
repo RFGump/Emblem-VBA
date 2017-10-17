@@ -1,0 +1,114 @@
+Public Sub EMB_to_CSV()
+
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    '-- DOCUMENTATION
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    '-- Purpose         Output data from current model to csv
+    '-- Author:         Rob Kane
+    '-- Date:           Oct 30, 2016
+    '-- References:     Microsoft Scripting Runtime
+    '-- Parameters:     strFilePath (path to and name of csv), booWriteAllSimples (indicates whether explanatory variables (all simple factors) should be exported as well), intWriteTheseSimples (vectory of simple factor indices to be included {instead of all or none}), lngMaxRows (exports a specific number of rows {observations} rather than all
+    '-- Output:         to specified csv
+    
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    '-- SETUP
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    'dimension local variables
+    Dim lngTotalObs As Long                 'number of observations
+    Dim lngObs_i As Long                    'loop through observations
+    Dim intSF_i As Integer                  'loop through simple factors
+    Dim strLine As String                   'line to be written
+    Dim strFilePath As String               'path to output file
+    Dim fso As FileSystemObject             'the file system object
+    Dim ts As TextStream                    'the text stream object
+    Dim booWriteAllSimples As Boolean       'indicates whether all simple factors should be included or not
+    Dim booWriteSomeSimples As Boolean      'indicates whether SOME simple factors should be included or not
+    Dim intWriteTheseSimples()              'a vector of simple factor indices to be included
+    Dim lngMaxRows As Long                  'user-specified maximum number of observations to include
+    Dim lngOutputRows As Long               'either equal to (a) lngMaxRows (if specified) or (b) lngTotalObs
+    
+    'get user-specified local variables
+    strFilePath = InputBox("Enter file path", , "C:\Users\pl41122\Desktop\Temp\train_03.csv")
+    'booWriteAllSimples = False
+    intWriteTheseSimples = Array(1, 2, 3, 4, 5, 6)
+    'lngMaxRows = 1000
+    
+    'assign other local variables
+    If (Not intWriteTheseSimples) = -1 Then booWriteSomeSimples = False Else booWriteSomeSimples = True
+    lngTotalObs = Application.BaseData.NumberOfObservations
+    If lngMaxRows > 0 Then lngOutputRows = lngMaxRows Else lngOutputRows = lngTotalObs
+
+    'instantiate objects
+    Set fso = New FileSystemObject
+    Set ts = fso.CreateTextFile(strFilePath, True)
+    
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    '-- PART 1: Write Header
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    'write header row.  include these always
+    strLine = "Observation,Observed_Value,Fitted_Value,Weight"
+    
+    'include ALL simple factor names if specified
+    If booWriteAllSimples Then
+        For intSF_i = 1 To Application.Simplefactors.Count
+            strLine = strLine & "," & Application.Simplefactors(intSF_i).Name
+        Next intSF_i
+    End If
+    
+    'include SOME simple factor names if specified
+    If booWriteSomeSimples Then
+        For intSF_i = 0 To UBound(intWriteTheseSimples)
+            strLine = strLine & "," & Application.Simplefactors(intWriteTheseSimples(intSF_i)).Name
+        Next intSF_i
+    End If
+    
+    'Debug.Print strLine
+    ts.WriteLine strLine
+    
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    '-- PART 2: Write Data Rows
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    'write data row for each observation.  include all or some simple factors if flag set to true
+    
+    For lngObs_i = 1 To lngOutputRows
+    
+        'always include y_i, mu_i, omega_i for each observation
+        strLine = lngObs_i & "," & Application.BaseData.YValue(lngObs_i) & "," & Round(Application.ModelResults.FittedMu(lngObs_i), 5) & "," & Application.BaseData.WeightData(lngObs_i)
+        
+        'include all simple factors if flag is set to true
+        If booWriteAllSimples Then
+            For intSF_i = 1 To Application.Simplefactors.Count
+                strLine = strLine & "," & Application.Simplefactors(intSF_i).LevelName(Application.BaseData.xValue(intSF_i, lngObs_i))
+            Next intSF_i
+       End If
+        
+        'include specific simple factors if array exists and we're not writing all simple factors
+        If booWriteSomeSimples Then
+            For intSF_i = 0 To UBound(intWriteTheseSimples)
+                strLine = strLine & "," & Application.Simplefactors(intWriteTheseSimples(intSF_i)).LevelName(Application.BaseData.xValue(intWriteTheseSimples(intSF_i), lngObs_i))
+            Next intSF_i
+        End If
+        
+        'Debug.Print strLine
+        ts.WriteLine strLine
+        
+        'just to monitor progress
+        If lngObs_i Mod 10000 = 0 Then Debug.Print lngObs_i & " of " & lngTotalObs
+    
+    Next lngObs_i
+    
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    '-- PART 3: Clean up
+    '------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    'clean up and leave
+    ts.Close
+    Set ts = Nothing
+    Set fso = Nothing
+    Exit Sub
+    
+End Sub
