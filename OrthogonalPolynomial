@@ -1,0 +1,42 @@
+Option Explicit
+
+Sub main()
+
+'Declare variables
+Dim sf As SimpleFactor
+Dim v As Variate
+Dim i As Long
+
+'Create variate (make sure model has atleast one variate)
+Set v = Variates(1)
+
+'Print properties of variate
+Debug.Print "Name: " & v.Name
+Debug.Print "Basefactor: " & v.BaseFactor
+Debug.Print "Orthogonal: " & v.OrthogonalPolynomialFlag
+
+'Print design matrix information
+Set sf = Simplefactors(v.BaseFactor)
+Debug.Print "Simple Factor Level/Design Matrix Value First Power/Design Matrix Value Second Power"
+For i = 1 To sf.NumberOfLevels
+    Debug.Print sf.LevelName(i) & " " & v.DesignXValue(1, i) & " " & v.DesignXValue(2, i) & " " & v.DesignXValue(3, i)
+Next
+
+'Print ortogonal polynomial information
+Dim xRange As Double
+Dim xSpan As Double
+Dim a() As Double
+Dim b() As Double
+ReDim a(1 To 10) As Double
+ReDim b(1 To 10) As Double
+
+v.OrthogonalPolynomialParameters xRange, xSpan, a(), b()
+
+Debug.Print "Range: " & xRange
+Debug.Print "Span: " & xSpan
+Debug.Print "a b"
+For i = LBound(a) To UBound(a)
+    Debug.Print a(i) & " " & b(i)
+Next
+
+End Sub
