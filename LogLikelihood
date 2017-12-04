@@ -1,0 +1,53 @@
+'written by Mike Nielsen
+'This code exports the values needed to calculate log likelihoods
+'  * fitted value
+'  * observed value
+'  * weights
+
+
+Public Sub exportRQR()
+
+    'need to add reference to Microsoft Scripting Runtime until Tools | References
+    
+    Dim lngObs As Long
+    Dim lngI As Long
+    Dim strLine As String                   'line to be written
+    
+    Dim strFilePath As String
+    
+    Dim fso As FileSystemObject
+    Dim ts As TextStream
+    
+    strFilePath = InputBox("Enter file path", , "d:\model_1.csv")
+    
+    Set fso = New FileSystemObject
+    Set ts = fso.CreateTextFile(strFilePath, True)
+    
+    lngObs = Application.BaseData.NumberOfObservations
+    
+    ' write out headers
+    strLine = "weight,observed,fitted,log-likelihood, ll_full, ll_kernel, ll_unscaled, deviance, DevResid"
+    ts.WriteLine strLine
+
+    ' write out values
+    For lngI = 1 To lngObs
+        strLine = Application.BaseData.WeightData(lngI) & ", " & _
+                  Application.BaseData.YValue(lngI) & ", " & _
+                  Application.ModelResults.FittedMu(lngI) & ", " & _
+                  Application.ModelResults.LogLikelihood & ", " & _
+                  Application.ModelResults.LogLikelihoodFull & ", " & _
+                  Application.ModelResults.LogLikelihoodKernel & ", " & _
+                  Application.ModelResults.LogLikelihoodUnscaled & ", " & _
+                  Application.ModelResults.Deviance & ", " & _
+                  Application.ModelResults.LinearResidual(lngI, 4)
+        ts.WriteLine strLine
+        If lngI Mod 10000 = 0 Then Debug.Print lngI & " of " & lngObs
+    Next lngI
+        
+    ts.Close
+    
+    Set ts = Nothing
+    Set fso = Nothing
+
+End Sub
+
