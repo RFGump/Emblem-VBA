@@ -1,0 +1,10 @@
+Option Explicit
+
+Sub InfoCrit_43()
+
+With Application
+  emblemLog.AddText "AIC_4.3 = " & -2 * .ModelResults.LogLikelihoodUnscaled + 2 * .ModelResults.NumberFittedParameters
+  emblemLog.AddText "BIC_4.3 = " & -2 * .ModelResults.LogLikelihoodUnscaled + .ModelResults.NumberFittedParameters * Log(.BaseData.NumberOfObservations)
+End With
+
+End Sub
